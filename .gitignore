@@ -1,0 +1,25 @@
+.env
+# Virtual environment
+venv/
+
+# Compiled Python files
+*.pyc
+__pycache__/
+
+# IDE files
+.idea/
+
+# SQLite database file
+telegram_bot_in-vesti.db
+
+# Configuration files
+config.ini
+
+# Logs
+*.log
+
+# Dependencies
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
