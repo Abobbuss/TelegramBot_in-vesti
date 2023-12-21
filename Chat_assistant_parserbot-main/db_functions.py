@@ -97,10 +97,14 @@ def update_person_by_id(person_id, new_full_name=None, new_phone=None):  # admin
 
     execute_query(update_query, tuple(update_values))
 
+def find_person_in_db(user_telegram_id):
+    query = 'SELECT * FROM Person WHERE telegramId = ?'
+    return execute_query(query, (user_telegram_id,), fetch_all=True)
+
+
 
 def get_all_people():  # admin
     query = 'SELECT * FROM Person'
-    print(execute_query(query, fetch_all=True))
     return execute_query(query, fetch_all=True)
 
 
