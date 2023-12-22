@@ -31,46 +31,8 @@ dp.middleware.setup(LoggingMiddleware())
 
 
 dp.register_message_handler(main_menu_handler.handle_start, commands=['start'])
-
-
-@dp.message_handler(state=States.waiting_for_name)
-async def process_name(message: types.Message, state: FSMContext):
-    await state.update_data(name=message.text)
-
-    await message.answer(f"Спасибо, {message.text}! Теперь укажите ваш номер телефона.")
-
-    await States.waiting_for_phone.set()
-
-@dp.message_handler(state=States.waiting_for_phone)
-async def process_phone(message: types.Message, state: FSMContext):
-    # Сохраняем введенный номер телефона в состояние FSM
-    await state.update_data(phone=message.text)
-
-    # Извлекаем данные из состояния
-    user_data = await state.get_data()
-
-    # Ваши данные для записи в БД
-    user_id = message.from_user.id
-    name = user_data.get('name')
-    phone = user_data.get('phone')
-
-    # Добавляем пользователя в БД
-    db_functions.add_person_to_db(user_id, name, phone)
-
-    # Завершаем процесс регистрации
-    await state.finish()
-
-    # Отправляем сообщение с благодарностью
-    await States.main_menu.set()
-    await message.answer("Спасибо за регистрацию! ", reply_markup=main_menu())
-    await States.contact.set()
-
-@dp.message_handler(content_types=types.ContentType.CONTACT, state=States.contact)
-async def contacts(msg: types.Message, state: FSMContext):
-    print(msg)
-    await msg.answer(f"Твой номер успешно получен: {msg.contact.phone_number}", reply_markup=types.ReplyKeyboardRemove())
-    await state.finish()
-
+dp.register_message_handler(main_menu_handler.process_name, state=States.waiting_for_name)
+dp.register_message_handler(main_menu_handler.process_phone, state=States.waiting_for_phone)
 
 @dp.callback_query_handler(lambda c: c.data == 'main_menu', state='*')
 async def process_main_menu(callback_query: types.CallbackQuery, state: FSMContext):
@@ -167,20 +129,6 @@ async def process_suggestion(message: types.Message, state: FSMContext):
     await state.finish()
 
     await message.answer("Спасибо за предложение! Оно было успешно добавлено в базу данных.",  reply_markup=main_menu())
-
-    # add_suggestion_to_db(message.chat.id, suggestion)
-    #
-    # await state.finish()
-    #
-    #
-    # print('hahahha')
-    # await States.edit_name.set()
-    # print('hahahha')
-    # event_id = int(callback_query.data.split(":")[1])
-    # if str(callback_query.from_user.id) in ADMIN:
-    #     print('hahahha')
-    #     db_functions.update_event_by_id(event_id)
-    # await callback_query.message.edit_text(f"Вы успешно изменили название", reply_markup=main_menu())
 
 @dp.callback_query_handler(lambda query: query.data.startswith("back:"), state='*')
 async def process_back_to_edit_event(callback_query: types.CallbackQuery, state: FSMContext):
@@ -326,15 +274,6 @@ def faq():
     ]
     keyboard.add(*buttons)
     return keyboard
-
-
-@dp.message_handler(lambda message: message.text.lower() == 'event')
-async def start_adding_event(message: Message):
-    event_name = message.text
-    db_functions.add_event_to_db(event_name, 'trololo')
-    await message.answer('Введите название мероприятия:' + event_name)
-
-
 
 if __name__ == '__main__':
     if not os.path.exists(DB_PATH):
