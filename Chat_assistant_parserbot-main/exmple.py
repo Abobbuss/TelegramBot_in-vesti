@@ -10,7 +10,7 @@ from aiogram.types import Message
 from datetime import datetime
 from state import States
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
-from handlers import main_menu_handler
+from handlers import events_handler, main_menu_handler
 
 from aiogram.types import ReplyKeyboardRemove, \
     ReplyKeyboardMarkup, KeyboardButton, \
@@ -34,18 +34,20 @@ dp.register_message_handler(main_menu_handler.handle_start, commands=['start'])
 dp.register_message_handler(main_menu_handler.process_name, state=States.waiting_for_name)
 dp.register_message_handler(main_menu_handler.process_phone, state=States.waiting_for_phone)
 
-@dp.callback_query_handler(lambda c: c.data == 'main_menu', state='*')
-async def process_main_menu(callback_query: types.CallbackQuery, state: FSMContext):
-    await States.main_menu.set()
-    await callback_query.answer()
-    await callback_query.message.edit_text("1Главное", reply_markup=main_menu())
+dp.register_message_handler(events_handler.process_events_menu, lambda c: c.data == 'events', state='*')
+
+# @dp.callback_query_handler(lambda c: c.data == 'main_menu', state='*')
+# async def process_main_menu(callback_query: types.CallbackQuery, state: FSMContext):
+#     await States.main_menu.set()
+#     await callback_query.answer()
+#     await callback_query.message.edit_text("1Главное", reply_markup=main_menu())
 
 
-@dp.callback_query_handler(lambda c: c.data == 'events', state='*')
-async def process_events_menu(callback_query: types.CallbackQuery, state: FSMContext):
-    await States.events.set()
-    await callback_query.answer()
-    await callback_query.message.edit_text("2Мероприятия", reply_markup=events(str(callback_query.from_user.id)))
+# @dp.callback_query_handler(lambda c: c.data == 'events', state='*')
+# async def process_events_menu(callback_query: types.CallbackQuery, state: FSMContext):
+#     await States.events.set()
+#     await callback_query.answer()
+#     await callback_query.message.edit_text("2Мероприятия", reply_markup=events(str(callback_query.from_user.id)))
 
 @dp.callback_query_handler(lambda c: c.data == 'list_of_events', state='*')
 async def process_list_of_events_menu(callback_query: types.CallbackQuery, state: FSMContext):
