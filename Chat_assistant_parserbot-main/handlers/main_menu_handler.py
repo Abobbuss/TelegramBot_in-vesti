@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Command
 from aiogram.types import CallbackQuery
-from state import States
+from myState import States
 import kbs
 import db_functions
 import os
@@ -49,3 +49,7 @@ async def process_phone(message: types.Message, state: FSMContext):
         await message.answer("Спасибо за регистрацию! ", reply_markup=kbs.main_menu())
     except Exception as e:
         await message.answer(exception_message)
+
+async def main_menu(callback_query: types.CallbackQuery, state: FSMContext):
+    await States.main_menu.set()
+    await callback_query.message.edit_text("Выберите действие:", reply_markup=kbs.main_menu())

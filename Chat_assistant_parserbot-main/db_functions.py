@@ -7,32 +7,29 @@ load_dotenv()
 DB_PATH = os.environ.get('DB_PATH')
 
 def execute_query(query, values=None, fetch_all=False):
-    # Создаем подключение к базе данных
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
-    # Выполняем запрос
     if values is not None:
         cursor.execute(query, values)
     else:
         cursor.execute(query)
 
-        # Если нужно получить результат, возвращаем его
     result = cursor.fetchall() if fetch_all else None
 
-    # Сохраняем изменения и закрываем соединение
     conn.commit()
     conn.close()
 
     return result
 
+# Мероприятия
 
-def add_event_to_db(event_name, event_date):
+def add_event_to_db(event_name, event_date, event_description):
     query = ''' 
-        INSERT INTO Events (name, date) 
-        VALUES (?, ?) 
+        INSERT INTO Events (name, date, description) 
+        VALUES (?, ?, ?) 
     '''
-    execute_query(query, (event_name, event_date))
+    execute_query(query, (event_name, event_date, event_description))
 
 
 def update_event_by_id(event_id, new_name=None, new_date=None):
@@ -59,12 +56,16 @@ def get_all_events():
     query = 'SELECT * FROM Events'
     return execute_query(query, fetch_all=True)
 
+def get_event(event_id):
+    query = 'SELECT * FROM Events WHERE id = ?'
+    return execute_query(query, (event_id,), fetch_all=True)
 
-def delete_event_by_id(event_id):
+def delete_event_by_id(event_id):   #admin
     delete_query = 'DELETE FROM Events WHERE id = ?'
     execute_query(delete_query, (event_id,))
 
 # people
+    
 def add_person_to_db(telegram_id, full_name, phone):
     query = ''' 
         INSERT INTO Person (telegramId, fullName, phone) 
@@ -101,7 +102,9 @@ def find_person_in_db(user_telegram_id):
     query = 'SELECT * FROM Person WHERE telegramId = ?'
     return execute_query(query, (user_telegram_id,), fetch_all=True)
 
-
+def get_info_about_person(person_id):
+    query = 'SELECT * FROM Person WHERE id = ?'
+    return execute_query(query, (person_id,), fetch_all=True)
 
 def get_all_people():  # admin
     query = 'SELECT * FROM Person'
@@ -169,6 +172,9 @@ def delete_qa_by_id(qa_id):  # admin
     query = 'DELETE FROM QA WHERE id = ?'
     execute_query(query, (qa_id,))
 
+def get_answer_by_id(qa_id):
+    query = 'SELECT * FROM QA WHERE id=?'
+    return execute_query(query, (qa_id,), fetch_all=True)
 
 # Мероприятие - человек
 
@@ -183,9 +189,11 @@ def add_event_person_to_db(event_id, person_id):
 
 def get_all_event_person():  # admin
     query = 'SELECT * FROM EventPerson'
-    print(execute_query(query, fetch_all=True))
     return execute_query(query, fetch_all=True)
 
+def get_all_people_of_event(event_id):
+    query = 'SELECT * FROM EventPerson WHERE eventId = ?'
+    return execute_query(query, (event_id,), fetch_all=True)
 
 def update_event_person_by_id(event_person_id, new_event_id=None, new_person_id=None):  # admin
     update_query = 'UPDATE EventPerson SET'
@@ -206,7 +214,35 @@ def update_event_person_by_id(event_person_id, new_event_id=None, new_person_id=
 
     execute_query(update_query, tuple(update_values))
 
+def find_event_person_by_id(person_id, event_id):
+    query = 'SELECT id FROM EventPerson WHERE personId = ? AND eventId = ?'
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(query, (person_id, event_id))
+        result = cursor.fetchone()
+        conn.close()
+
+        return result[0] if result else None
+    except Exception as e:
+        return None
 
 def delete_event_person_by_id(event_person_id):
     query = 'DELETE FROM EventPerson WHERE id = ?'
     execute_query(query, (event_person_id,))
+
+def get_active_people():
+    query = '''
+        SELECT p.fullName, COUNT(ep.eventId) as eventCount
+        FROM Person p
+        LEFT JOIN EventPerson ep ON p.id = ep.personId
+        GROUP BY p.fullName
+    '''
+
+    result = execute_query(query, fetch_all=True)
+
+    active_people_list = []
+    for row in result:
+        active_people_list.append((row[0], row[1]))
+
+    return active_people_list

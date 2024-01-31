@@ -36,6 +36,7 @@ def create_bd():
             CREATE TABLE IF NOT EXISTS QA ( 
                 id INTEGER PRIMARY KEY, 
                 question TEXT, 
+                answer_type TEXT,
                 answer TEXT 
             ) 
         ''')
@@ -52,7 +53,8 @@ def create_bd():
             CREATE TABLE IF NOT EXISTS Events ( 
                 id INTEGER PRIMARY KEY, 
                 name TEXT, 
-                date TEXT 
+                date TEXT ,
+                description TEXT
             ) 
         ''')
 
